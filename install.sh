@@ -16,7 +16,7 @@ echo
 
 echo "[1/8] Installing system dependencies..."
 
-pacman -S --needed --noconfirm \
+sudo pacman -S --needed --noconfirm \
     python \
     python-pip \
     ffmpeg \

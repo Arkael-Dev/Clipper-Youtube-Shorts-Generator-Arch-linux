@@ -35,8 +35,10 @@ def call_ollama_llm(prompt: str) -> str:
     client = OpenAI(
         base_url=OLLAMA_BASE_URL,
         api_key="ollama",
-        timeout=300.0,
+        timeout=900.0,
     )
+
+    print("[Ollama] Generating...", flush=True)
 
     response = client.chat.completions.create(
         model=OLLAMA_MODEL,
@@ -45,30 +47,9 @@ def call_ollama_llm(prompt: str) -> str:
         messages=[{"role": "user", "content": prompt}],
     )
 
+    print("[Ollama] Generating... done", flush=True)
+
     return response.choices[0].message.content or ""
-
-def call_gemini_llm(prompt: str) -> str:
-    """Gemini backend used by --mode local when LLM_PROVIDER=gemini."""
-    try:
-        from google import genai  # type: ignore
-    except ImportError as e:
-        raise RuntimeError(
-            "google-genai is required for LLM_PROVIDER=gemini. Install it with:\n"
-            "    pip install -r requirements-local.txt"
-        ) from e
-
-    client = genai.Client(api_key=require_gemini_key())
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
-        config={
-            "temperature": 0.2,
-            "response_mime_type": "application/json",
-            "max_output_tokens": 8192,
-        },
-    )
-    return response.text or ""
-
 
 def call_local_llm(prompt: str) -> str:
     """Dispatch to the configured local LLM provider."""

@@ -33,30 +33,49 @@ def _normalize_highlight_duration(
 
     duration = end - start
 
-    # Reject unusably long/invalid candidates instead of rendering
-    # a long section of the source video.
+    # Never allow a generated clip to exceed 90 seconds.
     if duration > SHORT_MAX_DURATION:
         end = start + SHORT_MAX_DURATION
         duration = SHORT_MAX_DURATION
 
-    if duration < SHORT_MIN_DURATION:
-        return None
-
     segments = transcript.get("segments", [])
 
-    # Align the forced 90-second end to a Whisper segment boundary.
     if segments:
-        valid_ends = [
-            float(seg["end"])
-            for seg in segments
-            if start < float(seg.get("end", 0)) <= start + SHORT_MAX_DURATION
-        ]
+        # Find transcript boundaries after the requested start.
+        valid_ends = sorted(
+            {
+                float(seg["end"])
+                for seg in segments
+                if start < float(seg.get("end", 0)) <= start + SHORT_MAX_DURATION
+            }
+        )
+
         if valid_ends:
-            end = max(valid_ends)
+            # If Ollama returned a clip shorter than 20 seconds,
+            # automatically extend it to at least 20 seconds.
+            target_end = max(end, start + SHORT_MIN_DURATION)
+
+            extended = [
+                value for value in valid_ends
+                if value >= target_end
+            ]
+
+            if extended:
+                end = min(extended[0], start + SHORT_MAX_DURATION)
+            else:
+                # Use the furthest available transcript boundary,
+                # still respecting the 90-second maximum.
+                end = valid_ends[-1]
+
             duration = end - start
 
+    # Final safety check.
     if duration < SHORT_MIN_DURATION:
         return None
+
+    if duration > SHORT_MAX_DURATION:
+        end = start + SHORT_MAX_DURATION
+        duration = SHORT_MAX_DURATION
 
     result = dict(highlight)
     result["start_time"] = round(start, 3)

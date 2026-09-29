@@ -124,6 +124,11 @@ def download_youtube_local(video_url: str, fmt: str = "720", out_dir: Optional[s
         "js_runtimes": {"deno": {}},
     }
 
+    # Arch Linux Desktop: use Firefox cookies for YouTube.
+    # DroidSpaces/Android keeps the original behavior.
+    if not Path("/storage/emulated/0").exists():
+        ydl_opts["cookiesfrombrowser"] = ("firefox",)
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(video_url, download=True)
         path = ydl.prepare_filename(info)

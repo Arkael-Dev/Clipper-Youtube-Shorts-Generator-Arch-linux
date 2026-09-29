@@ -49,7 +49,7 @@ Your task: identify the most viral-worthy highlights from the transcript.
 
 Rules:
 - Every highlight must open with a strong HOOK — a line that grabs attention within the first 3 seconds
-- Duration MUST be 45-90 seconds. Never exceed 90 seconds. Prefer 50-75 seconds when the thought is complete
+- Duration MUST be 20-90 seconds. Never be shorter than 20 seconds or longer than 90 seconds. Prefer 45-75 seconds when the thought is complete
 - Never cut mid-sentence or mid-thought — each clip must feel complete and self-contained
 - Clips must not overlap significantly with each other
 - Score 0-100 on viral potential (not general quality)
@@ -223,6 +223,7 @@ def call_highlight_api(
 
     for attempt in range(1, MAX_HIGHLIGHT_API_ATTEMPTS + 1):
         raw = llm_fn(prompt)
+
         try:
             parsed = _parse_json_loose(raw)
             highlights = _sanitize_highlights(parsed.get("highlights"), duration=duration)
